@@ -8,6 +8,10 @@ describe Oystercard do
             expect(subject.balance).to eq(0)
         end
 
+        it 'initializes not being in_journey' do
+            expect(subject).to_not be_in_journey
+        end
+
     end
 
     describe '#top_up(amount)' do
@@ -29,6 +33,29 @@ describe Oystercard do
             subject.top_up(10)
             expect{ subject.deduct(3) }.to change{ subject.balance }.by(-3)
         end
+    end
+
+    context 'when on a journey' do
+        
+        describe '#touch_in' do
+            
+            it 'changes in_journey? from false to true' do
+                expect{ subject.touch_in }.to change{ subject.in_journey? }.from(false).to(true)
+                expect(subject).to be_in_journey
+            end
+
+        end
+
+        describe '#touch_out' do
+            
+            it 'changes in_journey? from true to false' do
+                subject.touch_in
+                expect{ subject.touch_out }.to change{ subject.in_journey? }.from(true).to(false)
+                expect(subject).to_not be_in_journey
+            end
+
+        end
+
     end
 
     
