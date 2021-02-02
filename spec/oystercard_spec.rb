@@ -3,6 +3,7 @@ require 'oystercard'
 describe Oystercard do
 
     let(:entry_station) { double :station }
+    let(:exit_station) { double :station }
     
     describe '#initialization' do
         
@@ -12,6 +13,10 @@ describe Oystercard do
 
         it 'initializes not being in_journey' do
             expect(subject).to_not be_in_journey
+        end
+
+        it 'initializes with an empty list of journeys' do
+            expect(subject.journey_history).to be_empty
         end
 
     end
@@ -59,18 +64,28 @@ describe Oystercard do
             
             it 'changes in_journey? from true to false' do
                 subject.touch_in(entry_station)
-                expect{ subject.touch_out }.to change{ subject.in_journey? }.from(true).to(false)
+                expect{ subject.touch_out(exit_station) }.to change{ subject.in_journey? }.from(true).to(false)
                 expect(subject).to_not be_in_journey
             end
 
             it 'charges the card the minimum fare for a journey' do
                 subject.touch_in(entry_station)
-                expect{ subject.touch_out }.to change{ subject.balance }.by(-Oystercard::MINIMUN_FARE)
+                expect{ subject.touch_out(exit_station) }.to change{ subject.balance }.by(-Oystercard::MINIMUN_FARE)
             end
 
             it 'forgets the entry station on touch out' do
                 subject.touch_in(entry_station)
-                expect{ subject.touch_out }.to change{ subject.entry_station }.from(entry_station).to(nil)
+                expect{ subject.touch_out(exit_station) }.to change{ subject.entry_station }.from(entry_station).to(nil)
+            end
+
+        end
+
+        describe 'saving journey history' do
+            
+            it 'saves a complete journey' do
+                subject.touch_in(entry_station)
+                subject.touch_out(exit_station)
+                expect(subject.journey_history).to include( { entry_station: entry_station, exit_station: exit_station } )
             end
 
         end
