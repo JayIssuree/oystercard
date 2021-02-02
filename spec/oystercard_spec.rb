@@ -1,6 +1,8 @@
 require 'oystercard'
 
 describe Oystercard do
+
+    let(:entry_station) { double :station }
     
     describe '#initialization' do
         
@@ -36,14 +38,19 @@ describe Oystercard do
         describe '#touch_in' do
             
             it 'changes in_journey? from false to true' do
-                expect{ subject.touch_in }.to change{ subject.in_journey? }.from(false).to(true)
+                expect{ subject.touch_in(entry_station) }.to change{ subject.in_journey? }.from(false).to(true)
                 expect(subject).to be_in_journey
             end
 
             it 'raises an error if there are insufficient funds upon touching in' do
                 subject = described_class.new
-                expect{ subject.touch_in }.to raise_error("Insufficient funds")
+                expect{ subject.touch_in(entry_station) }.to raise_error("Insufficient funds")
                 expect(subject).to_not be_in_journey
+            end
+            
+            it 'saves the entry station' do
+                expect{ subject.touch_in(entry_station) }.to change{ subject.entry_station }.from(nil).to(entry_station)
+
             end
 
         end
@@ -51,14 +58,19 @@ describe Oystercard do
         describe '#touch_out' do
             
             it 'changes in_journey? from true to false' do
-                subject.touch_in
+                subject.touch_in(entry_station)
                 expect{ subject.touch_out }.to change{ subject.in_journey? }.from(true).to(false)
                 expect(subject).to_not be_in_journey
             end
 
             it 'charges the card the minimum fare for a journey' do
-                subject.touch_in
+                subject.touch_in(entry_station)
                 expect{ subject.touch_out }.to change{ subject.balance }.by(-Oystercard::MINIMUN_FARE)
+            end
+
+            it 'forgets the entry station on touch out' do
+                subject.touch_in(entry_station)
+                expect{ subject.touch_out }.to change{ subject.entry_station }.from(entry_station).to(nil)
             end
 
         end
