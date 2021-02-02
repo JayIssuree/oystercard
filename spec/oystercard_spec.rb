@@ -36,12 +36,22 @@ describe Oystercard do
     end
 
     context 'when on a journey' do
+
+        before(:each) {
+            subject.top_up(Oystercard::MAXIMUM_BALANCE)
+        }
         
         describe '#touch_in' do
             
             it 'changes in_journey? from false to true' do
                 expect{ subject.touch_in }.to change{ subject.in_journey? }.from(false).to(true)
                 expect(subject).to be_in_journey
+            end
+
+            it 'raises an error if there are insufficient funds upon touching in' do
+                subject = described_class.new
+                expect{ subject.touch_in }.to raise_error("Insufficient funds")
+                expect(subject).to_not be_in_journey
             end
 
         end
