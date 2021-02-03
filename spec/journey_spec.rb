@@ -2,8 +2,8 @@ require 'journey'
 
 describe Journey do
 
-    let(:entry_station) { double :station }
-    let(:exit_station) { double :station }
+    let(:entry_station) { double :station, :zone => 1 }
+    let(:exit_station) { double :station, :zone => 5 }
 
     describe '#initialization' do
 
@@ -16,7 +16,7 @@ describe Journey do
             expect(subject).to_not be_in_progress
         end
 
-        it 'initialized as incomplete' do
+        it 'initializes as incomplete' do
             expect(subject).to_not be_complete
         end
 
@@ -68,6 +68,25 @@ describe Journey do
             subject.save_entry_station(entry_station)
             subject.save_exit_station(exit_station)
             expect(subject).to be_complete
+        end
+
+    end
+
+    describe '#fare' do
+        
+        it 'initializes with the penalty fare' do
+            expect(subject.fare).to eq(Journey::PENALTY_FARE)
+        end
+
+        it 'returns the mimimum fare if a journey is complete' do
+            subject.save_entry_station(entry_station)
+            subject.save_exit_station(exit_station)
+            expect(subject.fare).to eq(Journey::MINIMUN_FARE)
+        end
+
+        it 'returns the penalty fare if a journey is incomplete' do
+            subject.save_exit_station(exit_station)
+            expect(subject.fare).to eq(Journey::PENALTY_FARE)
         end
 
     end
