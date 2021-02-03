@@ -5,11 +5,6 @@ class Journey
     PENALTY_FARE = 6
     MINIMUN_FARE = 1
 
-    def initialize
-        @entry_station = nil
-        @exit_station = nil
-    end
-
     def save_entry_station(station)
         @entry_station = station
     end
