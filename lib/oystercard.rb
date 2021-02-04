@@ -26,24 +26,14 @@ class Oystercard
 
     def touch_in(station)
         insufficient_funds_check
-
-        if in_journey?
-            deduct(current_journey.fare)
-            complete_journey
-        end
-
+        complete_journey if in_journey?
         @current_journey = journey.new
-
         current_journey.save_entry_station(station)
     end
 
     def touch_out(station)
-
         @current_journey = journey.new if !in_journey?
-
         current_journey.save_exit_station(station)
-        
-        deduct(current_journey.fare)
         complete_journey
     end
 
@@ -62,6 +52,7 @@ class Oystercard
     end
 
     def complete_journey
+        deduct(current_journey.fare)
         save_journey
         @current_journey = nil
     end
