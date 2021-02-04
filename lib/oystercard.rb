@@ -32,7 +32,7 @@ class Oystercard
     end
 
     def touch_out(station)
-        deduct(MINIMUN_FARE)
+        deduct(current_journey.fare)
 
         current_journey.save_exit_station(station)
         complete_journey
@@ -54,16 +54,10 @@ class Oystercard
 
     def complete_journey
         save_journey
-        clear_journey
     end
 
     def save_journey
         journey_history << current_journey
-    end
-
-    def clear_journey
-        @entry_station = nil
-        @exit_station = nil
     end
 
 end

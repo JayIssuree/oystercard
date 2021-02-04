@@ -81,7 +81,7 @@ describe Journey do
         it 'returns the mimimum fare if a journey is complete' do
             subject.save_entry_station(entry_station)
             subject.save_exit_station(exit_station)
-            expect(subject.fare).to eq(Journey::MINIMUN_FARE)
+            expect(subject.fare).to eq(Journey::MINIMUM_FARE)
         end
 
         it 'returns the penalty fare if a journey is incomplete' do

@@ -5,7 +5,7 @@ describe Oystercard do
     let(:entry_station) { double :station }
     let(:exit_station) { double :station }
     let(:journey_class) { double :journey_class, :new => journey }
-    let(:journey) { double :journey, :save_entry_station => nil, :save_exit_station => nil }
+    let(:journey) { double :journey, :save_entry_station => nil, :save_exit_station => nil, :fare => 1 }
     let(:subject) { described_class.new(journey_class) }
     
     describe '#initialization' do
@@ -92,9 +92,11 @@ describe Oystercard do
                 expect(subject.in_journey?).to be(false)
             end
 
-            it 'charges the card the minimum fare for a journey' do
+            it 'calls deduct(journey.fare) when touching out' do
                 subject.touch_in(entry_station)
-                expect{ subject.touch_out(exit_station) }.to change{ subject.balance }.by(-Oystercard::MINIMUN_FARE)
+                expect(journey).to receive(:fare)
+                expect(subject).to receive(:deduct).with(journey.fare)
+                subject.touch_out(exit_station)
             end
 
             it 'calls jourey.save_exit_station on touch out' do
