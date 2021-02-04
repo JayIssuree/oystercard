@@ -80,12 +80,12 @@ describe Oystercard do
 
         describe '#touch_out' do
             
-            it 'calls journey.in_progress when having touched out' do
-                subject.touch_in(entry_station)
-                subject.touch_out(exit_station)
-                expect(journey).to receive(:in_progress?)
-                subject.in_journey?
-            end
+            # it 'calls journey.in_progress when having touched out' do
+            #     subject.touch_in(entry_station)
+            #     subject.touch_out(exit_station)
+            #     expect(journey).to receive(:in_progress?)
+            #     subject.in_journey?
+            # end
 
             it 'does not call in_progress on the current journey when there is not a current journey' do
                 expect(journey).not_to receive(:in_progress?)
@@ -94,6 +94,7 @@ describe Oystercard do
 
             it 'calls deduct(journey.fare) when touching out' do
                 subject.touch_in(entry_station)
+                allow(journey).to receive(:in_progress?).and_return(true)
                 expect(journey).to receive(:fare)
                 expect(subject).to receive(:deduct).with(journey.fare)
                 subject.touch_out(exit_station)
@@ -101,6 +102,7 @@ describe Oystercard do
 
             it 'calls jourey.save_exit_station on touch out' do
                 subject.touch_in(entry_station)
+                allow(journey).to receive(:in_progress?).and_return(true)
                 expect(journey).to receive(:save_exit_station).with(exit_station)
                 subject.touch_out(exit_station)
             end
@@ -111,8 +113,23 @@ describe Oystercard do
             
             it 'saves a complete journey' do
                 subject.touch_in(entry_station)
+                allow(journey).to receive(:in_progress?).and_return(true)
                 subject.touch_out(exit_station)
                 expect(subject.journey_history).to include( journey )
+            end
+
+        end
+
+        describe 'edge cases' do
+            
+            it 'stores an incomplete journey when touching in twice' do
+                subject.touch_in(entry_station)
+                allow(journey).to receive(:in_progress?).and_return(true)
+                expect{ subject.touch_in(entry_station) }.to change{ subject.journey_history.length }.by(1)
+            end
+
+            it 'stores an incomplete journey when only touching out' do
+                expect{ subject.touch_out(exit_station) }.to change{ subject.journey_history.length }.by(1)
             end
 
         end
