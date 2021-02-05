@@ -79,13 +79,6 @@ describe Oystercard do
         end
 
         describe '#touch_out' do
-            
-            # it 'calls journey.in_progress when having touched out' do
-            #     subject.touch_in(entry_station)
-            #     subject.touch_out(exit_station)
-            #     expect(journey).to receive(:in_progress?)
-            #     subject.in_journey?
-            # end
 
             it 'does not call in_progress on the current journey when there is not a current journey' do
                 expect(journey).not_to receive(:in_progress?)
