@@ -78,13 +78,20 @@ describe Journey do
             expect(subject.fare).to eq(Journey::PENALTY_FARE)
         end
 
-        it 'returns the mimimum fare if a journey is complete' do
+        it 'returns the mimimum fare between the same zone' do
             subject.save_entry_station(entry_station)
-            subject.save_exit_station(exit_station)
+            subject.save_exit_station(entry_station)
             expect(subject.fare).to eq(Journey::MINIMUM_FARE)
         end
 
+        it 'calculates the correct fare between different zones' do
+            subject.save_entry_station(entry_station)
+            subject.save_exit_station(exit_station)
+            expect(subject.fare).to eq(5)
+        end
+
         it 'returns the penalty fare if a journey is incomplete' do
+            expect(subject.fare).to eq(Journey::PENALTY_FARE)
             subject.save_exit_station(exit_station)
             expect(subject.fare).to eq(Journey::PENALTY_FARE)
         end

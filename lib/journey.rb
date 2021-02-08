@@ -4,6 +4,7 @@ class Journey
 
     PENALTY_FARE = 6
     MINIMUM_FARE = 1
+    CHARGE_PER_ZONE = 1
 
     def save_entry_station(station)
         @entry_station = station
@@ -28,7 +29,11 @@ class Journey
     private
 
     def calculate_fare
-        complete? ? MINIMUM_FARE : PENALTY_FARE
+        complete? ? zone_fare : PENALTY_FARE
+    end
+
+    def zone_fare
+        MINIMUM_FARE + ((entry_station.zone - exit_station.zone).abs * CHARGE_PER_ZONE)
     end
 
 end
