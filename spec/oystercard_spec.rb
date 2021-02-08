@@ -4,9 +4,11 @@ describe Oystercard do
 
     let(:entry_station) { double :station }
     let(:exit_station) { double :station }
-    let(:journey_class) { double :journey_class, :new => journey }
-    let(:journey) { double :journey, :save_entry_station => nil, :save_exit_station => nil, :fare => 1 }
-    let(:subject) { described_class.new(journey_class) }
+    let(:journey_log_class) { double :journey_log_class, :new => journey_log }
+    let(:journey_log) { double :journey_log, :current_journey => journey, :history => [], :start => nil, :finish => nil }
+    let(:journey) { double :journey, :fare => 0 }
+
+    let(:subject) { described_class.new(journey_log_class: journey_log_class) }
     
     describe '#initialization' do
         
@@ -14,21 +16,18 @@ describe Oystercard do
             expect(subject.balance).to eq(0)
         end
 
-        it 'initializes not being in_journey' do
-            expect(subject).to_not be_in_journey
+        it 'calls journey.in_progress' do
+            expect(journey).to receive(:in_progress?)
+            subject.in_journey?
         end
 
         it 'initializes with an empty list of journeys' do
+            expect(journey_log).to receive(:history)
             expect(subject.journey_history).to be_empty
         end
 
-        it 'initializes with a journey class' do
-            expect(subject.journey).to eq(journey_class)
-        end
-
-        it 'does not call in_progress on the current journey when there is not a current journey' do
-            expect(journey).not_to receive(:in_progress?)
-            expect(subject.in_journey?).to be(false)
+        it 'initializes with a journey log' do
+            expect(subject.journey_log).to eq(journey_log)
         end
 
     end
@@ -50,79 +49,47 @@ describe Oystercard do
 
         before(:each) {
             subject.top_up(Oystercard::MAXIMUM_BALANCE)
+            allow(journey).to receive(:in_progress?).and_return(false)
         }
         
         describe '#touch_in' do
             
-            it 'calls journey.new on touching in' do
-                expect(journey_class).to receive(:new)
+            it 'calls journey_log.start on touching in' do
+                expect(journey_log).to receive(:start).with(entry_station)
                 subject.touch_in(entry_station)
-            end
-            
-            it 'calls journey.in_progress when having touched in' do
-                subject.touch_in(entry_station)
-                expect(journey).to receive(:in_progress?)
-                subject.in_journey?
             end
 
             it 'raises an error if there are insufficient funds upon touching in' do
-                subject = described_class.new(journey_class)
+                subject = described_class.new(journey_log_class: journey_log_class)
                 expect{ subject.touch_in(entry_station) }.to raise_error("Insufficient funds")
                 expect(subject).to_not be_in_journey
             end
-            
-            it 'calls journey.save)entry_station on touch in' do
-                expect(journey).to receive(:save_entry_station).with(entry_station)
+
+            it 'calls deduct(fare) when touching in while already on an incomplete journey' do
+                allow(journey).to receive(:in_progress?).and_return(true)
+                expect(subject).to receive(:deduct).with(journey.fare)
                 subject.touch_in(entry_station)
             end
 
         end
 
         describe '#touch_out' do
-
-            it 'does not call in_progress on the current journey when there is not a current journey' do
-                expect(journey).not_to receive(:in_progress?)
-                expect(subject.in_journey?).to be(false)
+            
+            it 'calls jourey_log.finish on touching out' do
+                subject.touch_in(entry_station)
+                allow(journey).to receive(:in_progress?).and_return(true)
+                allow(journey_log).to receive(:history).and_return([journey])
+                expect(journey_log).to receive(:finish).with(exit_station)
+                subject.touch_out(exit_station)
             end
 
             it 'calls deduct(journey.fare) when touching out' do
                 subject.touch_in(entry_station)
                 allow(journey).to receive(:in_progress?).and_return(true)
+                allow(journey_log).to receive(:history).and_return([journey])
                 expect(journey).to receive(:fare)
                 expect(subject).to receive(:deduct).with(journey.fare)
                 subject.touch_out(exit_station)
-            end
-
-            it 'calls jourey.save_exit_station on touch out' do
-                subject.touch_in(entry_station)
-                allow(journey).to receive(:in_progress?).and_return(true)
-                expect(journey).to receive(:save_exit_station).with(exit_station)
-                subject.touch_out(exit_station)
-            end
-
-        end
-
-        describe 'saving journey history' do
-            
-            it 'saves a complete journey' do
-                subject.touch_in(entry_station)
-                allow(journey).to receive(:in_progress?).and_return(true)
-                subject.touch_out(exit_station)
-                expect(subject.journey_history).to include( journey )
-            end
-
-        end
-
-        describe 'edge cases' do
-            
-            it 'stores an incomplete journey when touching in twice' do
-                subject.touch_in(entry_station)
-                allow(journey).to receive(:in_progress?).and_return(true)
-                expect{ subject.touch_in(entry_station) }.to change{ subject.journey_history.length }.by(1)
-            end
-
-            it 'stores an incomplete journey when only touching out' do
-                expect{ subject.touch_out(exit_station) }.to change{ subject.journey_history.length }.by(1)
             end
 
         end

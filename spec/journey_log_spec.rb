@@ -14,6 +14,10 @@ describe JourneyLog do
             expect(subject.journey_class).to eq(journey_class)
         end
 
+        it 'is initialized with an empty array' do
+            expect(subject.history).to be_empty
+        end
+
     end
 
     describe '#start(entry_station)' do
@@ -28,41 +32,23 @@ describe JourneyLog do
             subject.start(station)
         end
 
-        it 'saves the journey' do
-            subject.start(station)
-            allow(journey).to receive(:in_progress?).and_return(true)
-            subject.start(station)
-            expect(subject.journeys).to include(journey)
-        end
-
     end
 
     describe '#finish(exit_station)' do
-        
-        it 'creates a new instance of journey if the current one is complete' do
-            expect(journey_class).to receive(:new)
-            subject.finish(station)
-        end
 
         it 'saves the station to the journey' do
             expect(journey).to receive(:save_exit_station).with(station)
             subject.finish(station)
         end
 
-        it 'saves the incomplete journey' do
-            subject.finish(station)
-            expect(subject.journeys).to include(journey)
-        end
-
     end
 
-    describe 'edge cases' do
+    context 'completed journey' do
         
-        it 'saves only 1 journey' do
+        it 'saves the completed journey' do
             subject.start(station)
             allow(journey).to receive(:in_progress?).and_return(true)
-            subject.finish(station)
-            expect(subject.journeys.length).to eq(1)
+            expect{ subject.finish(station) }.to change{ subject.history.length }.by(1)
         end
 
     end
